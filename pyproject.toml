@@ -1,0 +1,29 @@
+[project]
+name = "market-analytics-platform"
+version = "0.1.0"
+description = "Market analytics platform"
+readme = "README.md"
+authors = [
+    { name = "Anton Goetzee-Barral", email = "anton.goetzee-barral@krakenflex.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "websockets>=17.1",
+]
+
+[project.scripts]
+market-analytics-platform = "market_analytics_platform.main:main"
+
+[dependency-groups]
+dev = [
+    "ruff>=0.16.5",
+]
+
+[build-system]
+requires = ["uv_build>=0.12.3,<0.13.0"]
+build-backend = "uv_build"
+
+[[tool.uv.index]]
+name = "pypi"
+url = "https://pypi.org/simple"
+default = true

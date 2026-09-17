@@ -1,1 +1,1 @@
-# market-analytics-platform
+# Market Analytics Platform
