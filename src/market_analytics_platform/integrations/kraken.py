@@ -22,18 +22,18 @@ SYMBOLS = [
 
 Message = dict[str, Any] | None
 Flusher = Callable[[list[Message]], None]
-OnReceive = Callable[[str], Message]
+OnMessage = Callable[[str], Message]
 
 
 class KrakenClient:
-    def __init__(self: Self, on_receive: OnReceive, flush: Flusher) -> None:
+    def __init__(self: Self, on_message: OnMessage, flush: Flusher) -> None:
         self.url = WS_URL
-        self.on_receive = on_receive
+        self.on_message = on_message
         self.flush = flush
 
     def consume(self: Self, symbols: list[str]) -> None:
         try:
-            asyncio.run(self.collect_messages(symbols))
+            asyncio.run(self._consume(symbols))
         except KeyboardInterrupt:
             print("interrupted")
 
@@ -50,7 +50,7 @@ class KrakenClient:
         )
         await ws.send(json.dumps({"event": "subscribe", "feed": "heartbeat"}))
 
-    async def collect_messages(self: Self, symbols: list[str]) -> list[Message]:
+    async def _consume(self: Self, symbols: list[str]) -> list[Message]:
         messages: list[Message] = []
         try:
             print("starting...")
@@ -58,29 +58,33 @@ class KrakenClient:
                 await self.subscribe(ws, symbols)
 
                 async for raw_message in ws:
-                    message = self.on_receive(raw_message)
+                    message = self.on_message(raw_message)
 
                     messages.append(message)
                     logger.info("Message count: %d", len(messages))
 
         finally:
             self.flush(messages)
+            await ws.close()
             print("exiting...")
         return messages
 
 
-def on_receive(message: str) -> Message:
+def on_message(message: str) -> Message:
     try:
         return json.loads(message)
     except json.JSONDecodeError:
         logger.warning("Failed to decode message: %s", message)
 
 
+flush = lambda messages: OUTPUT_PATH.write_text(
+    json.dumps(messages),
+)
+
+
 def main() -> None:
     client = KrakenClient(
-        on_receive=on_receive,
-        flush=lambda messages: OUTPUT_PATH.write_text(
-            json.dumps(messages),
-        ),
+        on_message=on_message,
+        flush=flush,
     )
     client.consume(SYMBOLS)

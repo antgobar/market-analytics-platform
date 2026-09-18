@@ -19,7 +19,7 @@ var SYMBOLS = []string{
 const URL = "wss://futures.kraken.com/ws/v1"
 
 func main() {
-	client, err := NewKrakenClient(URL)
+	client, err := NewKrakenClient(URL, onMessage)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -29,19 +29,26 @@ func main() {
 	client.Consume()
 }
 
-type KrakenClient struct {
-	Url string
-	ws  *websocket.Conn
+func onMessage(msg []byte) any {
+	fmt.Println("ON message called")
+	return nil
 }
 
-func NewKrakenClient(url string) (*KrakenClient, error) {
+type KrakenClient struct {
+	Url       string
+	ws        *websocket.Conn
+	OnMessage func([]byte) any
+}
+
+func NewKrakenClient(url string, onMessage func([]byte) any) (*KrakenClient, error) {
 	ws, err := websocket.Dial(url, "", "http://localhost/")
 	if err != nil {
 		return nil, err
 	}
 	return &KrakenClient{
-		Url: url,
-		ws:  ws,
+		Url:       url,
+		ws:        ws,
+		OnMessage: onMessage,
 	}, nil
 }
 
@@ -72,6 +79,7 @@ func (c *KrakenClient) Consume() {
 			log.Fatal(err)
 		}
 		fmt.Printf("Received: %s.\n", msg[:n])
+		c.OnMessage(msg)
 	}
 }
 

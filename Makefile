@@ -1,8 +1,8 @@
 .PHONY: run format
 
 run:
-	uv run market-analytics-platform
+	@uv run market-analytics-platform
 
 format:
-	uv run ruff check --fix .
-	uv run ruff format .
+	@uv run ruff check --fix .
+	@uv run ruff format .
