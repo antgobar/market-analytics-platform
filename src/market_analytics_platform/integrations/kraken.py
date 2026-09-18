@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 WS_URL = "wss://futures.kraken.com/ws/v1"
-OUTPUT_PATH = Path("cached_messages.json")
+OUTPUT_PATH = Path("output/cached_messages.json")
 SYMBOLS = [
     "PI_XBTUSD",
     # "PI_ETHUSD",
@@ -62,6 +62,7 @@ class KrakenClient:
 
                     messages.append(message)
                     logger.info("Message count: %d", len(messages))
+
         finally:
             self.flush(messages)
             print("exiting...")
