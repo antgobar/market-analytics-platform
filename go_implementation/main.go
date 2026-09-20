@@ -117,3 +117,9 @@ func CreateSymbolSubscribe(symbols []string) ([]byte, error) {
 	}
 	return e, nil
 }
+
+type WsClient struct {
+	SendChan    chan<- any
+	ReceiveChan <-chan any
+	Url         string
+}
