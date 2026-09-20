@@ -64,7 +64,7 @@ class KrakenV1:
             print("exiting...")
 
 
-class GetKrakenInstrumentsError(Exception): ...
+class GetKrakenV1InstrumentsError(Exception): ...
 
 
 def _load_symbols() -> list[str]:
@@ -73,9 +73,9 @@ def _load_symbols() -> list[str]:
     )
     response = httpx.get(_kraken_instruments_url)
     if response.status_code != 200:
-        raise GetKrakenInstrumentsError("Failed to retrieve Kraken instruments")
+        raise GetKrakenV1InstrumentsError("Failed to retrieve Kraken instruments")
     data = response.json()
     if data.get("result") != "success":
-        raise GetKrakenInstrumentsError("Kraken instrument retrieval failed")
+        raise GetKrakenV1InstrumentsError("Kraken instrument retrieval failed")
 
     return [item["symbol"] for item in data["instruments"]]

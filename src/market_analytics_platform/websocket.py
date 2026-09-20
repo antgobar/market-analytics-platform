@@ -1,4 +1,3 @@
-import asyncio
 import json
 from typing import Any, Self
 
@@ -18,7 +17,7 @@ class WebsocketClient:
             await self.connect()
         await self.ws.send(json.dumps(payload))
 
-    async def async_receive(self: Self):
+    async def receive(self: Self):
         if self.ws is None:
             await self.connect()
         try:
@@ -27,9 +26,3 @@ class WebsocketClient:
 
         finally:
             await self.ws.close()
-
-    def sync_receive(self: Self) -> None:
-        try:
-            asyncio.run(self.async_receive())
-        except KeyboardInterrupt:
-            print("interrupted")
