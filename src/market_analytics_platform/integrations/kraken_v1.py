@@ -23,7 +23,7 @@ _SYMBOLS = [
 OnMessage = Callable[[str], Any]
 
 
-class Kraken:
+class KrakenV1:
     def __init__(self: Self, on_message: OnMessage) -> None:
         self.url = _WS_URL
         self.on_message = on_message
