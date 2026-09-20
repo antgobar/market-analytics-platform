@@ -1,6 +1,9 @@
 import logging
 from typing import Any
 
+from market_analytics_platform.integrations.kraken_v1 import (
+    KrakenV1,
+)
 from market_analytics_platform.integrations.kraken_v2 import (
     KrakenV2,
 )
@@ -15,11 +18,13 @@ def main() -> None:
     store = Store()
 
     def kraken_on_message(message: str) -> Any:
-        store.save_event("kraken_v2", message)
+        store.save_event("kraken", message)
 
-    client = KrakenV2(on_message=kraken_on_message)
+    client_v1 = KrakenV1(on_message=kraken_on_message)
+    client_v2 = KrakenV2(on_message=kraken_on_message)
     try:
-        client.read()
+        client_v1.read()
+        client_v2.read()
     finally:
         store.close()
         print(store.get_summary())

@@ -1,11 +1,11 @@
 import asyncio
-import json
 import logging
 from collections.abc import Callable
 from typing import Any, Self
 
 import httpx
-from websockets.asyncio.client import ClientConnection, connect
+
+from market_analytics_platform.websocket import WebsocketClient
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -27,19 +27,11 @@ class KrakenV1:
     def __init__(self: Self, on_message: OnMessage) -> None:
         self.url = _WS_URL
         self.on_message = on_message
-        self.ws: ClientConnection | None = None
-        self._lock = asyncio.Lock()
-        self._subscriptions = {}
-
-    async def connect(self: Self) -> None:
-        self.ws = await connect(self.url)
-        await self.ws.send(json.dumps({"event": "subscribe", "feed": "heartbeat"}))
+        self.client = WebsocketClient(self.url)
 
     async def subscribe(self, symbols: list[str]) -> None:
-        if self.ws is None:
-            await self.connect()
-        await self.ws.send(
-            json.dumps({"event": "subscribe", "feed": "ticker", "product_ids": symbols})
+        await self.client.send(
+            {"event": "subscribe", "feed": "ticker", "product_ids": symbols}
         )
 
     def read(self: Self) -> None:
@@ -49,19 +41,11 @@ class KrakenV1:
             print("interrupted")
 
     async def _read(self: Self, symbols: list[str]) -> None:
-        await self.connect()
         await self.subscribe(symbols)
-        try:
-            print("starting...")
-            async for raw_message in self.ws:
-                logger.info(
-                    "Received message, time: %s", asyncio.get_event_loop().time()
-                )
-                self.on_message(raw_message)
-
-        finally:
-            await self.ws.close()
-            print("exiting...")
+        print("starting...")
+        async for raw_message in self.client.receive():
+            logger.info("Received message, time: %s", asyncio.get_event_loop().time())
+            self.on_message(raw_message)
 
 
 class GetKrakenV1InstrumentsError(Exception): ...
