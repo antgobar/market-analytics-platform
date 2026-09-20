@@ -1,4 +1,5 @@
 import json
+from collections.abc import AsyncGenerator
 from typing import Any, Self
 
 from websockets.asyncio.client import ClientConnection, connect
@@ -17,7 +18,7 @@ class WebsocketClient:
             await self.connect()
         await self.ws.send(json.dumps(payload))
 
-    async def receive(self: Self):
+    async def receive(self: Self) -> AsyncGenerator[str]:
         if self.ws is None:
             await self.connect()
         try:

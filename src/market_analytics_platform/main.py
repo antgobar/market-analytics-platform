@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from typing import Any
 
@@ -22,13 +23,23 @@ def main() -> None:
 
     client_v1 = KrakenV1(on_message=kraken_on_message)
     client_v2 = KrakenV2(on_message=kraken_on_message)
+
+    async def run():
+        try:
+            await asyncio.gather(
+                client_v1.read(),
+                client_v2.read(),
+            )
+        finally:
+            store.close()
+            print(store.get_summary())
+
     try:
-        client_v1.read()
-        client_v2.read()
-    finally:
-        store.close()
-        print(store.get_summary())
+        asyncio.run(run())
+    except KeyboardInterrupt:
+        print("Keyboard interrupt received, shutting down...")
 
 
 if __name__ == "__main__":
+    # run without uv
     main()

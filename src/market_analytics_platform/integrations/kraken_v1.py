@@ -13,11 +13,11 @@ logger = logging.getLogger(__name__)
 _WS_URL = "wss://futures.kraken.com/ws/v1"
 _SYMBOLS = [
     "PI_XBTUSD",
-    "PI_ETHUSD",
-    "PI_XRPUSD",
-    "PF_BRETTUSD",
-    "FI_ETHUSD_210625",
-    "FI_XBTUSD_210625",
+    # "PI_ETHUSD",
+    # "PI_XRPUSD",
+    # "PF_BRETTUSD",
+    # "FI_ETHUSD_210625",
+    # "FI_XBTUSD_210625",
 ]
 
 OnMessage = Callable[[str], Any]
@@ -34,14 +34,8 @@ class KrakenV1:
             {"event": "subscribe", "feed": "ticker", "product_ids": symbols}
         )
 
-    def read(self: Self) -> None:
-        try:
-            asyncio.run(self._read(_SYMBOLS))
-        except KeyboardInterrupt:
-            print("interrupted")
-
-    async def _read(self: Self, symbols: list[str]) -> None:
-        await self.subscribe(symbols)
+    async def read(self: Self) -> None:
+        await self.subscribe(_SYMBOLS)
         print("starting...")
         async for raw_message in self.client.receive():
             logger.info("Received message, time: %s", asyncio.get_event_loop().time())
