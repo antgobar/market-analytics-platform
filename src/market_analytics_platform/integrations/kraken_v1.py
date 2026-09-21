@@ -67,7 +67,6 @@ class KrakenV1:
         logger.info("Subscribed to Kraken V1 instruments: %s", _INSTRUMENT_IDS)
         async for raw_message in self.client.receive():
             logger.info("Received message, time: %s", asyncio.get_event_loop().time())
-            # print(raw_message)
             event = self.handle_message(raw_message)
             if event is not None:
                 self.store.save(event)
