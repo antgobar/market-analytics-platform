@@ -2,6 +2,8 @@ import logging
 import sqlite3
 from typing import Self
 
+from market_analytics_platform.models import Event
+
 _DB_NAME = "output/market_data.db"
 
 
@@ -17,15 +19,15 @@ class Store:
     def _new_connection() -> sqlite3.Connection:
         return sqlite3.connect(_DB_NAME)
 
-    def save_event(self: Self, integration: str, event: str):
+    def save(self: Self, event: Event):
         con = self.con
         cur = con.cursor()
         cur.execute(
             """
-            INSERT INTO events (integration, event)
-            VALUES (?, ?)
+            INSERT INTO events (integration, event, channel, instrument_id)
+            VALUES (?, ?, ?, ?)
             """,
-            (integration, event),
+            (event.integration, event.payload, event.channel, event.instrument_id),
         )
         con.commit()
 
@@ -43,7 +45,7 @@ class Store:
             """
         )
         summary = cur.fetchall()
-        con.close()
+        self.close()
         return summary
 
     @staticmethod
@@ -56,7 +58,9 @@ class Store:
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
                 integration TEXT NOT NULL,
-                event TEXT
+                event TEXT,
+                channel TEXT NULL,
+                instrument_id TEXT NULL
             )
             """
         )
