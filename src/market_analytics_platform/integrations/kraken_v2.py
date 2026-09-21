@@ -47,11 +47,37 @@ class KrakenV2:
         if data is None:
             return None
 
+        # Request/response messages (e.g. subscribe acks) carry "method", not "channel".
+        if "method" in data:
+            if not data.get("success", True):
+                logger.error("Received error response: %s", message)
+            else:
+                logger.info("Received method response: %s", message)
+            return None
+
+        channel = data.get("channel")
+        if channel in ("status", "heartbeat"):
+            logger.info("Received %s message: %s", channel, message)
+            return None
+        if channel == "error":
+            logger.error("Received error message: %s", message)
+            return None
+
+        items = data.get("data")
+        if not items:
+            logger.warning("Received unhandled message: %s", message)
+            return None
+
+        symbol = items[0].get("symbol")
+        if symbol is None:
+            logger.warning("Received message without symbol: %s", message)
+            return None
+
         return Event(
             integration="kraken_v2",
             payload=message,
-            channel="ticker",
-            instrument_id=data["params"]["symbol"],
+            channel=channel,
+            instrument_id=symbol,
         )
 
     async def read(self: Self) -> None:
@@ -59,10 +85,9 @@ class KrakenV2:
         logger.info("Subscribed to Kraken V2 instruments: %s", _SYMBOLS)
         async for raw_message in self.client.receive():
             logger.info("Received message, time: %s", asyncio.get_event_loop().time())
-            print(raw_message)
-            # event = self.handle_message(raw_message)
-            # if event is not None:
-            #     self.store.save(event)
+            event = self.handle_message(raw_message)
+            if event is not None:
+                self.store.save(event)
 
     def _load_symbols(self: Self) -> list[str]:
         response = httpx.get(self.instruments_url)

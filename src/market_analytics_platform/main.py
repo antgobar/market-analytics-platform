@@ -21,7 +21,7 @@ def main() -> None:
     async def run():
         try:
             await asyncio.gather(
-                # client_v1.read(),
+                client_v1.read(),
                 client_v2.read(),
             )
         finally:
