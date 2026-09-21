@@ -1,11 +1,12 @@
 import asyncio
 import json
 import logging
-from typing import Any, Protocol, Self
+from typing import Self
 
 import httpx
 
 from market_analytics_platform.models import Event
+from market_analytics_platform.store import Store
 from market_analytics_platform.websocket import WebsocketClient
 
 logging.basicConfig(level=logging.INFO)
@@ -13,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 _WS_URL = "wss://futures.kraken.com/ws/v1"
 _INSTRUMENTS_URL = "https://futures.kraken.com/derivatives/api/v3/instruments"
-_SYMBOLS = [
+_INSTRUMENT_IDS = [
     "PI_XBTUSD",
     "PI_ETHUSD",
     "PI_XRPUSD",
@@ -23,20 +24,16 @@ _SYMBOLS = [
 ]
 
 
-class Store(Protocol):
-    def save(self, event: Event) -> None: ...
-
-
 class KrakenV1:
-    def __init__(self: Self, store: Any) -> None:
+    def __init__(self: Self, store: Store) -> None:
         self.url = _WS_URL
         self.instruments_url = _INSTRUMENTS_URL
         self.store = store
         self.client = WebsocketClient(self.url)
 
-    async def subscribe(self, symbols: list[str]) -> None:
+    async def subscribe(self, channel: str, instrument_ids: list[str]) -> None:
         await self.client.send(
-            {"event": "subscribe", "feed": "ticker", "product_ids": symbols}
+            {"event": "subscribe", "feed": channel, "product_ids": instrument_ids}
         )
 
     def handle_message(self: Self, message: str) -> Event | None:
@@ -66,8 +63,8 @@ class KrakenV1:
         )
 
     async def read(self: Self) -> None:
-        await self.subscribe(_SYMBOLS)
-        logger.info("Subscribed to Kraken V1 instruments: %s", _SYMBOLS)
+        await self.subscribe("ticker", _INSTRUMENT_IDS)
+        logger.info("Subscribed to Kraken V1 instruments: %s", _INSTRUMENT_IDS)
         async for raw_message in self.client.receive():
             logger.info("Received message, time: %s", asyncio.get_event_loop().time())
             # print(raw_message)

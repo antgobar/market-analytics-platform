@@ -15,10 +15,10 @@ logger = logging.getLogger(__name__)
 
 _WS_URL = "wss://ws.kraken.com/v2"
 _INSTRUMENTS_URL = "https://api.kraken.com/0/public/AssetPairs"
-_SYMBOLS = [
+_INSTRUMENT_IDS = [
     "BTC/USD",
-    # "ETH/USD",
-    # "XRP/USD",
+    "ETH/USD",
+    "XRP/USD",
 ]
 
 
@@ -30,11 +30,11 @@ class KrakenV2:
         self.ws: ClientConnection | None = None
         self.client = WebsocketClient(self.url)
 
-    async def subscribe(self, symbols: list[str]) -> None:
+    async def subscribe(self, channel: str, instrument_ids: list[str]) -> None:
         await self.client.send(
             {
                 "method": "subscribe",
-                "params": {"channel": "ticker", "symbol": symbols},
+                "params": {"channel": channel, "symbol": instrument_ids},
             }
         )
 
@@ -81,8 +81,8 @@ class KrakenV2:
         )
 
     async def read(self: Self) -> None:
-        await self.subscribe(_SYMBOLS)
-        logger.info("Subscribed to Kraken V2 instruments: %s", _SYMBOLS)
+        await self.subscribe("ticker", _INSTRUMENT_IDS)
+        logger.info("Subscribed to Kraken V2 instruments: %s", _INSTRUMENT_IDS)
         async for raw_message in self.client.receive():
             logger.info("Received message, time: %s", asyncio.get_event_loop().time())
             event = self.handle_message(raw_message)
