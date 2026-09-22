@@ -2,6 +2,7 @@ import asyncio
 import logging
 
 from market_analytics_platform.config import load_config
+from market_analytics_platform.integrations.coinbase import Coinbase
 from market_analytics_platform.integrations.kraken_v1 import (
     KrakenV1,
 )
@@ -22,7 +23,7 @@ def main() -> None:
     initial_state = store.get_summary()
     ws_integrations = register_integrations(
         integrations_config=config.integrations,
-        integrations=[KrakenV1, KrakenV2],
+        integrations=[KrakenV1, KrakenV2, Coinbase],
         store=store,
         websocket_cls=WebsocketClient,
     )

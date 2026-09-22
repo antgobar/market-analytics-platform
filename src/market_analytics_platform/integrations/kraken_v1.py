@@ -6,6 +6,7 @@ from typing import Self
 import httpx
 
 from market_analytics_platform.domain import Event, Store, WebsocketClient
+from market_analytics_platform.integrations.base import BaseIntegration
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -20,7 +21,7 @@ _INSTRUMENT_IDS = [
 ]
 
 
-class KrakenV1:
+class KrakenV1(BaseIntegration):
     integration_name = "kraken_v1"
 
     def __init__(

@@ -7,6 +7,10 @@
         "kraken_v2": {
             "ws_url": "wss://ws.kraken.com/v2",
             "instruments_url": "https://api.kraken.com/0/public/AssetPairs"
+        },
+        "coinbase": {
+            "ws_url": "wss://advanced-trade-ws.coinbase.com",
+            "instruments_url": ""
         }
     }
 }
