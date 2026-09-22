@@ -18,3 +18,20 @@ class Store(Protocol):
 class WebsocketClient(Protocol):
     async def send(self, message: dict) -> None: ...
     async def receive(self) -> AsyncGenerator[str]: ...
+
+
+IntegrationName = str
+
+
+@dataclass
+class IntegrationConfig:
+    ws_url: str
+    instruments_url: str
+
+
+IntegrationsConfig = dict[IntegrationName, IntegrationConfig]
+
+
+@dataclass
+class Config:
+    integrations: IntegrationsConfig

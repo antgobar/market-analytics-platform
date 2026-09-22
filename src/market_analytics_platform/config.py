@@ -1,22 +1,7 @@
 import json
-from dataclasses import dataclass
 from pathlib import Path
 
-IntegrationName = str
-
-
-@dataclass
-class IntegrationConfig:
-    ws_url: str
-    instruments_url: str
-
-
-IntegrationsConfig = dict[IntegrationName, IntegrationConfig]
-
-
-@dataclass
-class Config:
-    integrations: IntegrationsConfig
+from market_analytics_platform.domain import Config, IntegrationConfig
 
 
 def load_config(path: Path) -> Config:

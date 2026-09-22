@@ -33,11 +33,25 @@ class KrakenV1(BaseIntegration):
         self.instruments_url = instruments_url
         self.store = store
         self.websocket_client = websocket_client
+        self.lock = asyncio.Lock()
+        self.subscriptions = set()
 
     async def subscribe(self, channel: str, instrument_ids: list[str]) -> None:
-        await self.websocket_client.send(
-            {"event": "subscribe", "feed": channel, "product_ids": instrument_ids}
+
+        async with self.lock:
+            await self.websocket_client.send(
+                {"event": "subscribe", "feed": channel, "product_ids": instrument_ids}
+            )
+            self.subscriptions.update(instrument_ids)
+
+    async def unsubscribe(self, channel: str, instrument_ids: list[str]) -> None:
+        del channel, instrument_ids
+        raise NotImplementedError(
+            f"Unsubscribe method is not implemented for {self.integration_name} integration"
         )
+
+    async def shutdown(self: Self) -> None:
+        await self.websocket_client.close()
 
     def handle_message(self: Self, message: str) -> Event | None:
         data = None
@@ -65,7 +79,7 @@ class KrakenV1(BaseIntegration):
             instrument_id=data["product_id"],
         )
 
-    async def read(self: Self) -> None:
+    async def run(self: Self) -> None:
         await self.subscribe("ticker", _INSTRUMENT_IDS)
         logger.info("Subscribed to Kraken V1 instruments: %s", _INSTRUMENT_IDS)
         async for raw_message in self.websocket_client.receive():

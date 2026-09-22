@@ -39,6 +39,15 @@ class KrakenV2(BaseIntegration):
             }
         )
 
+    async def unsubscribe(self, channel: str, instrument_ids: list[str]) -> None:
+        del channel, instrument_ids
+        raise NotImplementedError(
+            f"Unsubscribe method is not implemented for {self.integration_name} integration"
+        )
+
+    async def shutdown(self: Self) -> None:
+        await self.websocket_client.close()
+
     def handle_message(self: Self, message: str) -> Event | None:
         data = None
         try:
@@ -81,7 +90,7 @@ class KrakenV2(BaseIntegration):
             instrument_id=symbol,
         )
 
-    async def read(self: Self) -> None:
+    async def run(self: Self) -> None:
         await self.subscribe("ticker", _INSTRUMENT_IDS)
         logger.info("Subscribed to Kraken V2 instruments: %s", _INSTRUMENT_IDS)
         async for raw_message in self.websocket_client.receive():

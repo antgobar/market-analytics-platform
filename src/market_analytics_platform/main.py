@@ -30,7 +30,7 @@ def main() -> None:
 
     async def run():
         try:
-            await asyncio.gather(*[client.read() for client in ws_integrations])
+            await ws_integrations.run()
         finally:
             store.close()
             print("Initial state:", initial_state)

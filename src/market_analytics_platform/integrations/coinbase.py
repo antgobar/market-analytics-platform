@@ -25,6 +25,15 @@ class Coinbase(BaseIntegration):
             )
         )
 
+    async def shutdown(self) -> None:
+        await self.websocket_client.close()
+
+    async def unsubscribe(self, channel: str, instrument_ids: list[str]) -> None:
+        del channel, instrument_ids
+        raise NotImplementedError(
+            f"Unsubscribe method is not implemented for {self.integration_name} integration"
+        )
+
     def handle_message(self, message: str) -> Event | None:
         data = None
         try:
@@ -38,7 +47,7 @@ class Coinbase(BaseIntegration):
             instrument_id=data.get("product_id", ""),
         )
 
-    async def read(self) -> None:
+    async def run(self) -> None:
         await self.subscribe("ticker", ["BTC-USD", "ETH-USD", "XRP-USD"])
         async for raw_message in self.websocket_client.receive():
             event = self.handle_message(raw_message)
