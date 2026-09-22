@@ -43,6 +43,12 @@ class KrakenV1(BaseIntegration):
                 {"event": "subscribe", "feed": channel, "product_ids": instrument_ids}
             )
             self.subscriptions.update(instrument_ids)
+        logger.info(
+            "Integration: %s - Subscribed to channel %s instruments: %s",
+            self.integration_name,
+            channel,
+            instrument_ids,
+        )
 
     async def unsubscribe(self, channel: str, instrument_ids: list[str]) -> None:
         del channel, instrument_ids
@@ -81,9 +87,13 @@ class KrakenV1(BaseIntegration):
 
     async def run(self: Self) -> None:
         await self.subscribe("ticker", _INSTRUMENT_IDS)
-        logger.info("Subscribed to Kraken V1 instruments: %s", _INSTRUMENT_IDS)
+
         async for raw_message in self.websocket_client.receive():
-            logger.info("Received message, time: %s", asyncio.get_event_loop().time())
+            logger.info(
+                "Integration: %s - Received message, time: %s",
+                self.integration_name,
+                asyncio.get_event_loop().time(),
+            )
             event = self.handle_message(raw_message)
             if event is not None:
                 self.store.save(event)

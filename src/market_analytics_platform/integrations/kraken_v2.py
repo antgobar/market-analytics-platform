@@ -30,13 +30,21 @@ class KrakenV2(BaseIntegration):
         self.instruments_url = instruments_url
         self.store = store
         self.websocket_client = websocket_client
+        self.lock = asyncio.Lock()
 
     async def subscribe(self, channel: str, instrument_ids: list[str]) -> None:
-        await self.websocket_client.send(
-            {
-                "method": "subscribe",
-                "params": {"channel": channel, "symbol": instrument_ids},
-            }
+        async with self.lock:
+            await self.websocket_client.send(
+                {
+                    "method": "subscribe",
+                    "params": {"channel": channel, "symbol": instrument_ids},
+                }
+            )
+        logger.info(
+            "Integration: %s - Subscribed to channel %s instruments: %s",
+            self.integration_name,
+            channel,
+            instrument_ids,
         )
 
     async def unsubscribe(self, channel: str, instrument_ids: list[str]) -> None:
@@ -92,14 +100,13 @@ class KrakenV2(BaseIntegration):
 
     async def run(self: Self) -> None:
         await self.subscribe("ticker", _INSTRUMENT_IDS)
-        logger.info("Subscribed to Kraken V2 instruments: %s", _INSTRUMENT_IDS)
         async for raw_message in self.websocket_client.receive():
             logger.info("Received message, time: %s", asyncio.get_event_loop().time())
             event = self.handle_message(raw_message)
             if event is not None:
                 self.store.save(event)
 
-    def _load_symbols(self: Self) -> list[str]:
+    def valid_instrument_ids(self: Self) -> list[str]:
         response = httpx.get(self.instruments_url)
         if response.status_code != 200:
             raise GetKrakenV2InstrumentsError("Failed to retrieve Kraken instruments")

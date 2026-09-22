@@ -1,7 +1,12 @@
+import asyncio
 import json
+import logging
 
 from market_analytics_platform.domain import Event, Store, WebsocketClient
 from market_analytics_platform.integrations.base import BaseIntegration
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class Coinbase(BaseIntegration):
@@ -13,16 +18,24 @@ class Coinbase(BaseIntegration):
         self.store = store
         self.websocket_client = websocket_client
         self.instruments_url = instruments_url
+        self.lock = asyncio.Lock()
 
     async def subscribe(self, channel: str, instrument_ids: list[str]):
-        await self.websocket_client.send(
-            json.dumps(
-                {
-                    "type": "subscribe",
-                    "product_ids": instrument_ids,
-                    "channel": channel,
-                }
+        async with self.lock:
+            await self.websocket_client.send(
+                json.dumps(
+                    {
+                        "type": "subscribe",
+                        "product_ids": instrument_ids,
+                        "channel": channel,
+                    }
+                )
             )
+        logger.info(
+            "Integration: %s - Subscribed to channel %s instruments: %s",
+            self.integration_name,
+            channel,
+            instrument_ids,
         )
 
     async def shutdown(self) -> None:
