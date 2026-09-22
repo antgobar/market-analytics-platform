@@ -2,7 +2,7 @@ import logging
 import sqlite3
 from typing import Self
 
-from market_analytics_platform.models import Event
+from market_analytics_platform.domain import Event
 
 _DB_NAME = "output/market_data.db"
 

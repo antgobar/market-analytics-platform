@@ -1,7 +1,18 @@
 from collections.abc import AsyncGenerator
+from dataclasses import dataclass
 from typing import Protocol
 
-from market_analytics_platform.models import Event
+
+@dataclass
+class Event:
+    integration: str
+    payload: dict
+    channel: str
+    instrument_id: str
+
+
+class OnMessage(Protocol):
+    def __call__(self, message: str) -> Event: ...
 
 
 class Store(Protocol):
@@ -11,3 +22,18 @@ class Store(Protocol):
 class WebsocketClient(Protocol):
     async def send(self, message: dict) -> None: ...
     async def receive(self) -> AsyncGenerator[str]: ...
+
+
+class Integration(Protocol):
+    integration_name: str
+
+    def __init__(
+        self,
+        store: Store,
+        websocket_client: WebsocketClient,
+        instruments_url: str,
+    ) -> None: ...
+
+
+class LoadedIntegration(Protocol):
+    async def read(self) -> None: ...

@@ -5,8 +5,7 @@ from typing import Self
 
 import httpx
 
-from market_analytics_platform.domain import Store, WebsocketClient
-from market_analytics_platform.models import Event
+from market_analytics_platform.domain import Event, Store, WebsocketClient
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

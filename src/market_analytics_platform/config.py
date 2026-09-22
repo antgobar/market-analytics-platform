@@ -11,12 +11,12 @@ class IntegrationConfig:
     instruments_url: str
 
 
-Integrations = dict[IntegrationName, IntegrationConfig]
+IntegrationsConfig = dict[IntegrationName, IntegrationConfig]
 
 
 @dataclass
 class Config:
-    integrations: Integrations
+    integrations: IntegrationsConfig
 
 
 def load_config(path: Path) -> Config:
