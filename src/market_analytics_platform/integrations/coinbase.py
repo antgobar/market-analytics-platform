@@ -1,8 +1,6 @@
 import json
 
-import websockets
-
-from market_analytics_platform.domain import Store, WebsocketClient
+from market_analytics_platform.domain import Event, Store, WebsocketClient
 from market_analytics_platform.integrations.base import BaseIntegration
 
 
@@ -16,17 +14,33 @@ class Coinbase(BaseIntegration):
         self.websocket_client = websocket_client
         self.instruments_url = instruments_url
 
-    async def main(url: str):
-        async with websockets.connect(url) as ws:
-            subscribe = {
-                "type": "subscribe",
-                "product_ids": ["BTC-USD"],
-                "channel": "ticker",
-            }
+    async def subscribe(self, channel: str, instrument_ids: list[str]):
+        await self.websocket_client.send(
+            json.dumps(
+                {
+                    "type": "subscribe",
+                    "product_ids": instrument_ids,
+                    "channel": channel,
+                }
+            )
+        )
 
-            await ws.send(json.dumps(subscribe))
+    def handle_message(self, message: str) -> Event | None:
+        data = None
+        try:
+            data = json.loads(message)
+        except json.JSONDecodeError:
+            return None
+        return Event(
+            integration=self.integration_name,
+            payload=message,
+            channel=data.get("channel", ""),
+            instrument_id=data.get("product_id", ""),
+        )
 
-            async for message in ws:
-                data = json.loads(message)
-                print()
-                print(data)
+    async def read(self) -> None:
+        await self.subscribe("ticker", ["BTC-USD", "ETH-USD", "XRP-USD"])
+        async for raw_message in self.websocket_client.receive():
+            event = self.handle_message(raw_message)
+            if event is not None:
+                self.store.save(event)
