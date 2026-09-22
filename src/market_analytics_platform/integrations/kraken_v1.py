@@ -5,15 +5,12 @@ from typing import Self
 
 import httpx
 
+from market_analytics_platform.domain import Store, WebsocketClient
 from market_analytics_platform.models import Event
-from market_analytics_platform.store import Store
-from market_analytics_platform.websocket import WebsocketClient
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-_WS_URL = "wss://futures.kraken.com/ws/v1"
-_INSTRUMENTS_URL = "https://futures.kraken.com/derivatives/api/v3/instruments"
 _INSTRUMENT_IDS = [
     "PI_XBTUSD",
     "PI_ETHUSD",
@@ -25,11 +22,17 @@ _INSTRUMENT_IDS = [
 
 
 class KrakenV1:
-    def __init__(self: Self, store: Store) -> None:
-        self.url = _WS_URL
-        self.instruments_url = _INSTRUMENTS_URL
+    integration_name = "kraken_v1"
+
+    def __init__(
+        self: Self,
+        store: Store,
+        websocket_client: WebsocketClient,
+        instruments_url: str,
+    ) -> None:
+        self.instruments_url = instruments_url
         self.store = store
-        self.client = WebsocketClient(self.url)
+        self.client = websocket_client
 
     async def subscribe(self, channel: str, instrument_ids: list[str]) -> None:
         await self.client.send(
@@ -56,7 +59,7 @@ class KrakenV1:
             return None
 
         return Event(
-            integration="kraken_v1",
+            integration=self.integration_name,
             payload=message,
             channel=data["feed"],
             instrument_id=data["product_id"],

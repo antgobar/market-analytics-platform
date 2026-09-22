@@ -1,0 +1,12 @@
+{
+    "integrations": {
+        "kraken_v1": {
+            "ws_url": "wss://futures.kraken.com/ws/v1",
+            "instruments_url": "https://futures.kraken.com/derivatives/api/v3/instruments"
+        },
+        "kraken_v2": {
+            "ws_url": "wss://ws.kraken.com/v2",
+            "instruments_url": "https://api.kraken.com/0/public/AssetPairs"
+        }
+    }
+}

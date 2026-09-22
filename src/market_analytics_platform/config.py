@@ -8,7 +8,7 @@ IntegrationName = str
 @dataclass
 class IntegrationConfig:
     ws_url: str
-    resource_url: str
+    instruments_url: str
 
 
 Integrations = dict[IntegrationName, IntegrationConfig]
@@ -27,7 +27,7 @@ def load_config(path: Path) -> Config:
     for name, conf in config.get("integrations", {}).items():
         cfg[name] = IntegrationConfig(
             ws_url=conf["ws_url"],
-            resource_url=conf["resource_url"],
+            instruments_url=conf["instruments_url"],
         )
 
     return Config(integrations=cfg)

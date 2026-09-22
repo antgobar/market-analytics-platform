@@ -4,17 +4,13 @@ import logging
 from typing import Self
 
 import httpx
-from websockets.asyncio.client import ClientConnection
 
+from market_analytics_platform.domain import Store, WebsocketClient
 from market_analytics_platform.models import Event
-from market_analytics_platform.store import Store
-from market_analytics_platform.websocket import WebsocketClient
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-_WS_URL = "wss://ws.kraken.com/v2"
-_INSTRUMENTS_URL = "https://api.kraken.com/0/public/AssetPairs"
 _INSTRUMENT_IDS = [
     "BTC/USD",
     "ETH/USD",
@@ -23,12 +19,17 @@ _INSTRUMENT_IDS = [
 
 
 class KrakenV2:
-    def __init__(self: Self, store: Store) -> None:
-        self.url = _WS_URL
-        self.instruments_url = _INSTRUMENTS_URL
+    integration_name = "kraken_v2"
+
+    def __init__(
+        self: Self,
+        store: Store,
+        websocket_client: WebsocketClient,
+        instruments_url: str,
+    ) -> None:
+        self.instruments_url = instruments_url
         self.store = store
-        self.ws: ClientConnection | None = None
-        self.client = WebsocketClient(self.url)
+        self.client = websocket_client
 
     async def subscribe(self, channel: str, instrument_ids: list[str]) -> None:
         await self.client.send(
@@ -74,7 +75,7 @@ class KrakenV2:
             return None
 
         return Event(
-            integration="kraken_v2",
+            integration=self.integration_name,
             payload=message,
             channel=channel,
             instrument_id=symbol,
