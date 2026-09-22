@@ -45,7 +45,6 @@ class Store:
             """
         )
         summary = cur.fetchall()
-        self.close()
         return summary
 
     @staticmethod

@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 def main() -> None:
     config = load_config("config.json")
     store = Store()
+    initial_state = store.get_summary()
     ws_integrations = register_integrations(
         integrations_config=config.integrations,
         integrations=[KrakenV1, KrakenV2],
@@ -31,6 +32,7 @@ def main() -> None:
             await asyncio.gather(*[client.read() for client in ws_integrations])
         finally:
             store.close()
+            print("Initial state:", initial_state)
             print(store.get_summary())
 
     try:

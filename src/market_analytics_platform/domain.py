@@ -11,10 +11,6 @@ class Event:
     instrument_id: str
 
 
-class OnMessage(Protocol):
-    def __call__(self, message: str) -> Event: ...
-
-
 class Store(Protocol):
     def save(self, event: Event) -> None: ...
 
